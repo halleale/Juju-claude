@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.env
+.server.log
+.DS_Store
+# Xcode (the project is generated from ios/project.yml)
+ios/Edge.xcodeproj/
+ios/*.xcworkspace/
+xcuserdata/
+DerivedData/
+build/

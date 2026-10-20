@@ -1,0 +1,51 @@
+name: Edge
+options:
+  bundleIdPrefix: com.yourcompany
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.10"
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    DEVELOPMENT_TEAM: "" # set your Apple Developer Team ID
+targets:
+  Edge:
+    type: application
+    platform: iOS
+    sources:
+      - path: Edge
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.yourcompany.edge
+        INFOPLIST_FILE: Edge/Resources/Info.plist
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        TARGETED_DEVICE_FAMILY: "1"
+        SUPPORTS_MACCATALYST: NO
+        ENABLE_PREVIEWS: YES
+      configs:
+        Debug:
+          EDGE_API_BASE_URL: "http://localhost:8787"
+        Release:
+          EDGE_API_BASE_URL: "https://api.example.com"
+  EdgeTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: EdgeTests
+    dependencies:
+      - target: Edge
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  Edge:
+    build:
+      targets:
+        Edge: all
+        EdgeTests: [test]
+    test:
+      targets:
+        - EdgeTests
