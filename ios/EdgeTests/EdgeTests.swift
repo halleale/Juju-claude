@@ -59,7 +59,7 @@ final class DecodingTests: XCTestCase {
               "risks": ["Line could move"],
               "sources": [{"title": "Injury report", "url": "https://example.com"}]
             },
-            "analysisSource": "claude"
+            "analysisSource": "ai"
           }]
         }
         """

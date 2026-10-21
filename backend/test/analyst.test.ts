@@ -1,6 +1,6 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { describe, expect, it } from "vitest";
-import { Analyst, AnalystError } from "../src/services/analyst.js";
+import { AnalystError, ClaudeAnalyst } from "../src/services/analyst.js";
 import { DemoOddsProvider } from "../src/services/odds-provider.js";
 import { findValueBets } from "../src/services/value-engine.js";
 
@@ -53,7 +53,7 @@ function submission(ids: string[], verdict = "strong") {
   };
 }
 
-describe("Analyst.analyze", () => {
+describe("ClaudeAnalyst.analyze", () => {
   it("continues paused turns, then returns validated analyses", async () => {
     const cands = await candidates();
     const ids = cands.map((c) => c.id);
@@ -61,7 +61,7 @@ describe("Analyst.analyze", () => {
       { stop_reason: "pause_turn", content: [{ type: "text", text: "Searching…", citations: null }] as never },
       { stop_reason: "tool_use", content: [submission(ids)] as never },
     ]);
-    const result = await new Analyst(client).analyze(cands, NOW);
+    const result = await new ClaudeAnalyst(client).analyze(cands, NOW);
 
     expect(requests).toHaveLength(2);
     // A paused turn is resumed by resending, with no extra user message.
@@ -82,7 +82,7 @@ describe("Analyst.analyze", () => {
       { stop_reason: "tool_use", content: [bad] as never },
       { stop_reason: "tool_use", content: [submission(cands.map((c) => c.id), "pass")] as never },
     ]);
-    const result = await new Analyst(client).analyze(cands, NOW);
+    const result = await new ClaudeAnalyst(client).analyze(cands, NOW);
     const retryTurn = requests[1]!.messages.at(-1)!;
     expect(retryTurn.role).toBe("user");
     expect(JSON.stringify(retryTurn.content)).toContain("toolu_bad");
@@ -92,6 +92,6 @@ describe("Analyst.analyze", () => {
   it("surfaces refusals as errors so the board falls back to rule-based analysis", async () => {
     const cands = await candidates();
     const { client } = fakeClient([{ stop_reason: "refusal", content: [] as never }]);
-    await expect(new Analyst(client).analyze(cands, NOW)).rejects.toBeInstanceOf(AnalystError);
+    await expect(new ClaudeAnalyst(client).analyze(cands, NOW)).rejects.toBeInstanceOf(AnalystError);
   });
 });

@@ -86,12 +86,12 @@ struct Pick: Codable, Hashable, Identifiable {
     let modelConfidence: Int
     let prices: [BookPrice]
     let analysis: Analysis
-    /// "claude" when researched by the AI analyst, "rules" for offline analysis.
+    /// "ai" when researched by the AI analyst, "rules" for offline analysis.
     let analysisSource: String
 
     var matchup: String { "\(awayTeam) @ \(homeTeam)" }
 
-    var isAIResearched: Bool { analysisSource == "claude" }
+    var isAIResearched: Bool { analysisSource != "rules" }
 
     /// e.g. "Celtics -4.5", "Over 221.5", "Knicks ML".
     var betLabel: String {

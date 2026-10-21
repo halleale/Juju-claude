@@ -4,7 +4,7 @@ Edge recommends sports bets that are **priced better than their true odds**, and
 
 ```
 ┌──────────────┐   HTTPS   ┌──────────────────────────── backend/ ───────────────────────────┐
-│  iOS app     │ ────────▶ │  Odds feed ──▶ Value engine ──▶ Claude analyst ──▶ Picks board  │
+│  iOS app     │ ────────▶ │  Odds feed ──▶ Value engine ──▶   AI analyst  ──▶ Picks board  │
 │  (SwiftUI)   │ ◀──────── │  (The Odds API)  (no-vig math,   (web research,    (cached per   │
 └──────────────┘           │                   +EV, Kelly)     verdicts)          sport)      │
                            └─────────────────────────────────────────────────────────────────┘
@@ -19,7 +19,7 @@ Being "intelligent" about betting mostly means being honest about prices. Edge d
 3. **Expected value.** A price that pays more than the fair probability implies is +EV. Example: fair odds of -104 while FanDuel offers +105 gives about +4.5% EV.
 4. **Stake sizing.** Quarter-Kelly on the fair probability, capped at 3% of bankroll. In the app the user picks a risk level that scales this.
 5. **Model confidence.** Each candidate gets a 0-100 score from book count, sharp coverage and agreement between books. It is deliberately *suspicious of huge edges*: a 10%+ edge is usually a stale line, not a gift.
-6. **AI research (Claude).** The top candidates go to Claude with web search. It checks injuries, lineups, starting pitchers and goalies, weather, rest and news. It then decides whether each edge is real or explained away (for example, a book hasn't moved after a star was ruled out), and returns a verdict (**strong / lean / pass**), a calibrated confidence, reasoning, key factors, risks and sources.
+6. **AI research (OpenAI or Claude).** The top candidates go to the AI analyst with web search. It checks injuries, lineups, starting pitchers and goalies, weather, rest and news. It then decides whether each edge is real or explained away (for example, a book hasn't moved after a star was ruled out), and returns a verdict (**strong / lean / pass**), a calibrated confidence, reasoning, key factors, risks and sources.
 
 Bets the analyst rejects stay visible under "Reviewed and passed", with the reason.
 
@@ -29,7 +29,8 @@ Bets the analyst rejects stay visible under "Reviewed and passed", with the reas
 backend/          TypeScript API (Node 20+, Hono)
   src/lib/odds-math.ts          odds conversion, vig removal, EV, Kelly
   src/services/value-engine.ts  finds +EV prices against the market consensus
-  src/services/analyst.ts       Claude research and grading loop, plus "Ask Edge" chat
+  src/services/analyst.ts       shared analyst prompts, Claude implementation, offline fallback
+  src/services/openai-analyst.ts OpenAI implementation
   src/services/picks-service.ts board building and caching
   src/services/odds-provider.ts The Odds API client and a demo feed
   test/                         vitest unit tests
@@ -53,7 +54,11 @@ npm test
 
 - **No keys:** a demo odds feed and rule-based explanations, so you can build and run the app immediately.
 - `ODDS_API_KEY` from [the-odds-api.com](https://the-odds-api.com) turns on live odds. The free tier is enough to try it; a paid plan is needed for production refresh rates.
-- `ANTHROPIC_API_KEY` from [platform.claude.com](https://platform.claude.com) turns on AI research and the Ask Edge chat. The analyst uses `claude-opus-5-5` (override with `CLAUDE_MODEL`). It runs at high effort with web search, so a fresh board takes a minute or two and costs API credits. Boards are cached per sport (`PICKS_TTL_MINUTES`) and refreshed in the background.
+- An AI key turns on AI research and the Ask Edge chat. Use either:
+  - `OPENAI_API_KEY` from [platform.openai.com](https://platform.openai.com). Uses the Responses API with web search and `gpt-5.5` by default (override with `OPENAI_MODEL`).
+  - `ANTHROPIC_API_KEY` from [platform.claude.com](https://platform.claude.com). Uses `claude-opus-5-5` by default (override with `CLAUDE_MODEL`).
+
+  If both are set, OpenAI is used unless `AI_PROVIDER=anthropic`. Either way the analyst runs at high reasoning effort with web search, so a fresh board takes a minute or two and costs API credits. Boards are cached per sport (`PICKS_TTL_MINUTES`) and refreshed in the background.
 
 `npm run dev` and `npm start` load `backend/.env` automatically.
 
@@ -98,7 +103,7 @@ Done already:
 
 Still to do:
 1. **Deploy the backend** over HTTPS (the Dockerfile works on Fly.io, Render, Railway, Cloud Run and similar). Set the Release `EDGE_API_BASE_URL` in `ios/project.yml`.
-2. **Protect the API.** Set `APP_TOKEN` on the server and add an `EdgeAPIToken` key to `Info.plist`. A shipped token can be extracted, so for production add rate limiting and ideally App Attest or a sign-in, because each board refresh spends Claude and odds-API credits.
+2. **Protect the API.** Set `APP_TOKEN` on the server and add an `EdgeAPIToken` key to `Info.plist`. A shipped token can be extracted, so for production add rate limiting and ideally App Attest or a sign-in, because each board refresh spends AI and odds-API credits.
 3. **Apple Developer account:** set `DEVELOPMENT_TEAM` and your bundle id in `project.yml`, then create the app in App Store Connect.
 4. **Gambling rules (App Review Guideline 5.3).** Edge gives information only and takes no wagers, so it doesn't need a gambling licence. Still:
    - Answer the age-rating questionnaire honestly about gambling content; expect the top age rating.

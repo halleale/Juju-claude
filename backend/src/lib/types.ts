@@ -90,8 +90,8 @@ export interface AIAnalysis {
 
 export interface Pick extends ValueCandidate {
   analysis: AIAnalysis;
-  /** "claude" when written by the model, "rules" when produced offline. */
-  analysisSource: "claude" | "rules";
+  /** "ai" when researched by the AI analyst, "rules" when produced offline. */
+  analysisSource: "ai" | "rules";
 }
 
 export interface PicksResponse {

@@ -3,7 +3,7 @@
 // researched board takes a while to produce and costs API credits.
 
 import type { AIAnalysis, Pick, PicksResponse, ValueCandidate } from "../lib/types.js";
-import { Analyst, ruleBasedAnalysis } from "./analyst.js";
+import { ruleBasedAnalysis, type AIAnalyst } from "./analyst.js";
 import type { OddsProvider } from "./odds-provider.js";
 import { findValueBets, type ValueEngineOptions } from "./value-engine.js";
 
@@ -31,7 +31,7 @@ export class PicksService {
 
   constructor(
     private readonly odds: OddsProvider,
-    private readonly analyst: Analyst | null,
+    private readonly analyst: AIAnalyst | null,
     private readonly opts: PicksServiceOptions = {},
   ) {
     this.ttlMs = opts.ttlMs ?? 20 * 60_000;
@@ -100,6 +100,6 @@ export class PicksService {
 
 function attach(c: ValueCandidate, analysis: AIAnalysis | undefined): Pick {
   return analysis
-    ? { ...c, analysis, analysisSource: "claude" }
+    ? { ...c, analysis, analysisSource: "ai" }
     : { ...c, analysis: ruleBasedAnalysis(c), analysisSource: "rules" };
 }
